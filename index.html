@@ -161,6 +161,23 @@ input.near { border-color: var(--rust); color: var(--rust); border-bottom-style:
 .dl .row a:hover { background: var(--ink); color: var(--paper); }
 .dl .hint { margin: 0; font-family: var(--hand); font-size: 19px; font-weight: 600; color: var(--blue); line-height: 1.1; }
 @media (max-width: 760px) { .side { align-items: stretch; } .dl .menu { left: 0; right: auto; width: min(300px, 90vw); } }
+.pgchips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pgchips b { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; font-weight: 400; color: var(--rust); text-transform: uppercase; }
+.pgchips a { font-family: var(--mono); font-size: 13px; color: var(--ink); text-decoration: none; border: 1px solid var(--ink); padding: 4px 10px; background: var(--paper-2); }
+.pgchips a:hover, .pgchips a.seen { background: var(--ink); color: var(--paper); }
+.cont { align-self: stretch; max-width: 794px; width: 100%; margin: -8px auto 0; display: flex; align-items: center; gap: 12px; font-family: var(--hand); font-size: 24px; font-weight: 700; color: var(--rust); background: none; border: 0; cursor: pointer; padding: 6px 0; }
+.cont::before, .cont::after { content: ''; flex: 1; border-top: 2px dashed var(--rust); }
+.cont .arr { display: inline-block; animation: nudge 1.4s ease-in-out infinite; }
+.cont.end { color: var(--muted); font-size: 20px; cursor: default; }
+.cont.end::before, .cont.end::after { border-top: 1px solid var(--line); }
+.more-pill { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 0); z-index: 50; display: flex; align-items: center; gap: 10px; background: var(--rust); color: var(--paper); border: 0; padding: 12px 22px; font-family: var(--body); font-size: 16px; cursor: pointer; box-shadow: 4px 4px 0 rgba(58, 22, 38, .25); transition: opacity .25s, transform .25s; }
+.more-pill[hidden] { display: flex; opacity: 0; pointer-events: none; transform: translate(-50%, 16px); }
+.more-pill .arr { display: inline-block; animation: nudge 1.4s ease-in-out infinite; }
+.pg-tag { position: absolute; right: 0; top: -1px; transform: translateY(-100%); font-family: var(--mono); font-size: 12px; background: var(--ink); color: var(--paper); padding: 3px 9px; }
+.sheet-wrap { position: relative; width: 100%; max-width: 794px; display: flex; flex-direction: column; align-items: center; }
+.book.full .sheet-wrap { width: 794px; max-width: none; }
+@keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .cont .arr, .more-pill .arr { animation: none; } }
 </style>
 </head>
 <body>
@@ -417,15 +434,41 @@ function pager(ti, mode) {
   return `<div class="pager">${prev}${next}</div>`;
 }
 
+function pagesWord(n) { return n % 10 === 1 && n % 100 !== 11 ? 'сторінка' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'сторінки' : 'сторінок'); }
+let moreObs = null;
 function renderBook(ti, focusPage) {
   const t = TOPICS[ti];
+  const n = t.book.length;
   let h = head(ti, 'book');
-  h += `<div class="book-tools"><span>Сторінки ${t.book.join(', ')} з ${PAGES.length}</span><button class="btn ghost" type="button" id="zoom">${full ? 'Вмістити в ширину' : 'Масштаб 100%'}</button></div>`;
-  h += `<div class="book${full ? ' full' : ''}" id="book">` + t.book.map(p => `<div class="sheet" id="page-${p}" role="img" aria-label="Сторінка ${p} посібника"><div class="pg">${PAGES[p - 1]}</div></div><span class="pg-num">с. ${p}</span>`).join('') + '</div>';
+  h += `<div class="book-tools"><div class="pgchips">${n > 1 ? `<b>У темі ${n} ${pagesWord(n)}:</b>` : `<b>Тема на 1 сторінці</b>`}` +
+    (n > 1 ? t.book.map(p => `<a href="#page-${p}" data-go="${p}">с. ${p}</a>`).join('') : '') +
+    `</div><button class="btn ghost" type="button" id="zoom">${full ? 'Вмістити в ширину' : 'Масштаб 100%'}</button></div>`;
+  h += `<div class="book${full ? ' full' : ''}" id="book">` + t.book.map((p, i) =>
+    `<div class="sheet-wrap">${n > 1 ? `<span class="pg-tag">${i + 1} / ${n}</span>` : ''}<div class="sheet" id="page-${p}" role="img" aria-label="Сторінка ${p} посібника"><div class="pg">${PAGES[p - 1]}</div></div></div>` +
+    (i < n - 1 ? `<button class="cont" type="button" data-go="${t.book[i + 1]}"><span>тема ще не закінчилась — далі с. ${t.book[i + 1]}</span><span class="arr">↓</span></button>`
+               : (n > 1 ? `<div class="cont end"><span>кінець теми</span></div>` : ''))).join('') + '</div>';
   h += `<div class="actions" style="border:0;justify-content:center"><a class="btn" href="#${t.id}">До вправ з теми «${esc(t.title)}» →</a></div>` + pager(ti, 'book');
+  if (n > 1) h += `<button class="more-pill" type="button" id="more-pill" hidden><span id="more-txt"></span><span class="arr">↓</span></button>`;
   document.getElementById('main').innerHTML = h;
   fitPages();
   document.getElementById('zoom').addEventListener('click', () => { full = !full; try { localStorage.setItem(KEY + '-zoom', full ? '1' : '0'); } catch (e) {} renderBook(ti); });
+  document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); const pg = document.getElementById('page-' + el.dataset.go); if (pg) pg.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  if (moreObs) { moreObs.disconnect(); moreObs = null; }
+  if (n > 1 && 'IntersectionObserver' in window) {
+    const pill = document.getElementById('more-pill'), txt = document.getElementById('more-txt');
+    const vis = new Set();
+    const upd = () => {
+      let last = -1; t.book.forEach((p, i) => { if (vis.has(p)) last = Math.max(last, i); });
+      const lastSeen = vis.has(t.book[n - 1]);
+      if (last < 0 || lastSeen) { pill.hidden = true; return; }
+      const left = n - 1 - last; const nextP = t.book[last + 1];
+      txt.textContent = `Ще ${left} ${pagesWord(left)} в цій темі`; pill.dataset.go = nextP; pill.hidden = false;
+      document.querySelectorAll('.pgchips a').forEach(a => a.classList.toggle('seen', vis.has(+a.dataset.go)));
+    };
+    moreObs = new IntersectionObserver(es => { es.forEach(e => { const p = +e.target.id.slice(5); if (e.isIntersecting) vis.add(p); else vis.delete(p); }); upd(); }, { rootMargin: '0px 0px -35% 0px' });
+    t.book.forEach(p => { const el = document.getElementById('page-' + p); if (el) moreObs.observe(el); });
+    pill.addEventListener('click', () => { const pg = document.getElementById('page-' + pill.dataset.go); if (pg) pg.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  }
   if (focusPage) { const el = document.getElementById('page-' + focusPage); if (el) el.scrollIntoView({ block: 'start' }); }
 }
 function fitPages() {
