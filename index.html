@@ -255,31 +255,38 @@ function align(u, e) {
 const AUX = ['do', 'does', 'did', 'is', 'are', 'am', 'was', 'were', 'have', 'has', 'had', 'will', 'would', 'can', 'could', 'shall', 'be', 'been', 'being'];
 const ART = ['a', 'an', 'the', '—'];
 const PAIR = [
-  [['do', 'does'], 'does — для he / she / it, do — для I / you / we / they.'],
-  [['am', 'is', 'are'], 'am — з I; is — з he / she / it та іменником в однині; are — з you / we / they та множиною.'],
-  [['was', 'were'], 'was — з I / he / she / it; were — з you / we / they. В умовних реченнях II типу — were для всіх осіб.'],
-  [['have', 'has'], 'has — з he / she / it; have — з I / you / we / they.'],
-  [['had', 'have', 'has'], 'had — минулий (Past Perfect: дія ДО іншої дії в минулому); have / has — теперішній (Present Perfect).'],
-  [['will', 'would'], 'would — минула форма will. Її беремо в умовних реченнях II–III типу і в непрямій мові («на час назад»).'],
-  [['can', 'could'], 'could — минула форма can (і ввічливіше прохання); у непрямій мові can → could.'],
-  [['is', 'are', 'was', 'were', 'am'], 'Не той час: am / is / are — теперішній, was / were — минулий. Подивіться на маркери часу в реченні.'],
-  [['do', 'does', 'did'], 'did — минулий час (Past Simple), do / does — теперішній (Present Simple).'],
-  [['be', 'been', 'being'], 'be — після модальних і will; been — після have / has / had; being — у Continuous пасиві (is being built).'],
+  [['do', 'does'], () => 'does — для he / she / it та однини, do — для I / you / we / they та множини.'],
+  [['am', 'is', 'are'], () => 'am — з I; is — з he / she / it та одниною; are — з you / we / they та множиною.'],
+  [['was', 'were'], (tp, u, e) => (tp === 'conditionals' || tp === 'mixed-conditionals') && e === 'were' && u === 'was' ? 'В умовних реченнях II типу після if ставимо were для всіх осіб, навіть з I / he / she / it: If I were you.' : 'was — з I / he / she / it та одниною; were — з you / we / they та множиною.'],
+  [['have', 'has'], () => 'has — з he / she / it та одниною; have — з I / you / we / they та множиною.'],
+  [['had', 'have', 'has'], () => 'had — Past Perfect: дія ДО іншої дії в минулому; have / has — Present Perfect: результат на зараз.'],
+  [['will', 'would'], tp => tp === 'conditionals' || tp === 'mixed-conditionals' ? 'will — реальний наслідок (I тип); would — «би», уявна ситуація (II–III тип).' : tp === 'indirect-speech' ? 'У непрямій мові will зсувається «на час назад» → would.' : 'will — майбутнє; would — «би» (уявна ситуація).'],
+  [['can', 'could'], tp => tp === 'indirect-speech' ? 'У непрямій мові can зсувається «на час назад» → could.' : 'can — можу зараз; could — міг (у минулому) або ввічливе «чи не могли б ви».'],
+  [['do', 'does', 'did'], () => 'did — минулий час (Past Simple); do / does — теперішній (Present Simple).'],
+  [['is', 'are', 'was', 'were', 'am'], () => 'am / is / are — теперішній час, was / were — минулий. Подивіться на маркери часу в реченні.'],
+  [['be', 'been', 'being'], () => 'be — після модальних і will; been — після have / has / had; being — у Continuous пасиві (is being built).'],
 ];
-const IRR = 'go went gone|see saw seen|be was been|be were been|do did done|have had had|eat ate eaten|write wrote written|take took taken|steal stole stolen|hide hid hidden|break broke broken|forget forgot forgotten|sing sang sung|speak spoke spoken|run ran run|buy bought bought|find found found|lose lost lost|win won won|sell sold sold|catch caught caught|make made made|leave left left|know knew known|get got gotten|come came come|fly flew flown|tell told told|think thought thought|wake woke woken|become became become|fall fell fallen|give gave given|begin began begun|drink drank drunk|swim swam swum|send sent sent|meet met met|show showed shown|grow grew grown|choose chose chosen|drive drove driven|ride rode ridden|wear wore worn|bring brought brought|teach taught taught|pay paid paid|say said said|keep kept kept|sleep slept slept|feel felt felt|hear heard heard|hold held held|stand stood stood|understand understood understood|lie lay lain|oversleep overslept overslept'.split('|').map(r => r.split(' '));
+// which subject goes with which form — used only to confirm a hint, never to guess
+const FORM_SUBJ = { was: ['i', 'he', 'she', 'it'], were: ['you', 'we', 'they'], is: ['he', 'she', 'it'], are: ['you', 'we', 'they'], am: ['i'], has: ['he', 'she', 'it'], have: ['i', 'you', 'we', 'they'], does: ['he', 'she', 'it'], do: ['i', 'you', 'we', 'they'] };
+const SING = ['was', 'is', 'has', 'does'];
+const IRR = 'go went gone|see saw seen|be was been|be were been|do did done|have had had|eat ate eaten|write wrote written|take took taken|steal stole stolen|hide hid hidden|break broke broken|forget forgot forgotten|sing sang sung|speak spoke spoken|run ran run|buy bought bought|find found found|lose lost lost|win won won|sell sold sold|catch caught caught|make made made|leave left left|know knew known|get got gotten|come came come|fly flew flown|tell told told|think thought thought|wake woke woken|become became become|fall fell fallen|give gave given|begin began begun|drink drank drunk|swim swam swum|send sent sent|meet met met|show showed shown|grow grew grown|choose chose chosen|drive drove driven|ride rode ridden|wear wore worn|bring brought brought|teach taught taught|pay paid paid|say said said|keep kept kept|sleep slept slept|feel felt felt|hear heard heard|hold held held|stand stood stood|understand understood understood|lie lay lain|oversleep overslept overslept|sit sat sat|lay laid laid|rise rose risen|shake shook shaken|bite bit bitten|hit hit hit|cut cut cut|put put put|set set set|let let let|shut shut shut|spend spent spent|lend lent lent|build built built|bend bent bent|learn learnt learnt|smell smelt smelt|spell spelt spelt|light lit lit|read read read|feed fed fed|fight fought fought|forgive forgave forgiven|freeze froze frozen|hang hung hung|hurt hurt hurt|lead led led|mean meant meant|ring rang rung|seek sought sought|shine shone shone|shoot shot shot|sink sank sunk|spin spun spun|stick stuck stuck|strike struck struck|swear swore sworn|throw threw thrown|tear tore torn|draw drew drawn|dig dug dug|blow blew blown|beat beat beaten|bet bet bet|bleed bled bled|cost cost cost|deal dealt dealt|forbid forbade forbidden|quit quit quit|sew sewed sewn|shrink shrank shrunk|spread spread spread|split split split|undo undid undone|withdraw withdrew withdrawn|lie lied lied|burn burnt burnt|dream dreamt dreamt|mistake mistook mistaken|overtake overtook overtaken|rebuild rebuilt rebuilt|wind wound wound|get got got|prove proved proven'.split('|').map(r => r.split(' '));
 const FN = ['V1', 'V2 (Past Simple)', 'V3 (Perfect і пасив)'];
 function irrWhy(u, e) {
+  if (/ed$/.test(u)) for (const st of [u.slice(0, -2), u.slice(0, -1)]) for (const r of IRR) if (r[0] === st && r.includes(e)) return `${q(st)} — неправильне дієслово, воно не утворює форми через -ed. Правильно: ${q(e)} (таблиця в Додатку II).`;
   for (const r of IRR) { const iu = r.indexOf(u), ie = r.lastIndexOf(e); if (iu > -1 && ie > -1 && iu !== ie && r[iu] !== r[ie]) return `${q(u)} — це ${FN[iu]}, а тут потрібна ${FN[ie]}: ${q(e)}.`; }
   return '';
 }
 const PREP = ['in', 'on', 'at', 'to', 'for', 'since', 'of', 'by', 'with', 'from', 'about', 'into'];
+const TIMEW = /^(\d|(january|february|march|april|may|june|july|august|september|october|november|december|monday|tuesday|wednesday|thursday|friday|saturday|sunday|night|noon|midnight|christmas|easter|summer|winter|spring|autumn|new year|my birthday|the (morning|afternoon|evening|weekend|\d|90s|80s|70s|21st|20th))\b)/i;
+const PREPTIME = 'Час: at — точний час і моменти (at 8, at midnight, at night); on — дні й дати (on Monday, on 5 May, on my birthday); in — довші періоди й частини дня (in May, in 2026, in the morning).';
+const PREPPLACE = 'Місце: in — всередині (in the box, in Kyiv, in the photo); on — на поверхні (on the wall), а також on the bus / train / plane; at — біля, при, точка на мапі (at the door, at home, at work).';
 const PREPWHY = 'in — місяці, роки, частини дня (in June, in 2022, in the evening); on — дні й дати (on Friday, on 24 August); at — точний час і свята (at 6, at midnight).';
-function pairWhy(u, e) { for (const [set, why] of PAIR) if (set.includes(u) && set.includes(e)) return why; return ''; }
+function pairWhy(u, e, tp) { for (const [set, why] of PAIR) if (set.includes(u) && set.includes(e)) return why(tp, u, e); return ''; }
 const ARTWHY = { a: 'a — коли згадуємо вперше, щось одне з багатьох, з професіями, замість per.', an: 'an — те саме, що a, але перед голосним звуком.', the: 'the — щось конкретне, вже згадане, унікальне; найвищий ступінь; порядкові числівники; назва виду (play the piano).', '—': 'Без артикля — узагальнення (усі в принципі), most = більшість, сталі вирази: go to bed, at home, at work.' };
 const q = w => `«${w}»`;
 function ending(u, e) {
   const plusS = (a, b) => b === a + 's' || b === a + 'es' || (a.endsWith('y') && b === a.slice(0, -1) + 'ies');
-  if (plusS(u, e)) return `Бракує закінчення -s / -es: ${q(u)} → ${q(e)}. Підмет тут — he / she / it (або іменник в однині, як the minister, my ex, Nova Poshta), а в Present Simple з таким підметом до основного дієслова в розповідному реченні додаємо -s. Після -s, -sh, -ch, -x, -o — -es; приголосна + y → -ies.`;
+  if (plusS(u, e)) return `Бракує закінчення -s / -es: ${q(u)} → ${q(e)}. Підмет тут — he / she / it (або іменник в однині: the minister, my cat, Kyiv), а в Present Simple з таким підметом до основного дієслова в розповідному реченні додаємо -s. Після -s, -sh, -ch, -x, -o — -es; приголосна + y → -ies.`;
   if (plusS(e, u)) return `Зайве -s / -es: ${q(u)} → ${q(e)}. Або підмет тут не he / she / it (I, you, we, they, множина), або в реченні вже є does / doesn’t — тоді -s «забирає» допоміжне, а основне дієслово лишається в базовій формі.`;
   if (e === u + 'ed' || e === u + 'd') return `Бракує закінчення -ed: ${q(u)} → ${q(e)}. Правильні дієслова в Past Simple і в третій формі (V3) отримують -ed.`;
   if (e.endsWith('ing') && (e === u + 'ing' || e === u.replace(/e$/, '') + 'ing' || e.slice(0, -4) === u)) return `Бракує -ing: ${q(u)} → ${q(e)}. Бачите Continuous (або тривалу дію) — до основного дієслова 100% додаємо -ing.`;
@@ -306,7 +313,79 @@ function targetOK(val, target) {
   const n = norm(val);
   return target.every ? new RegExp(target[0]).test(n) : true;
 }
-function diagnose(val, ans, model, ctx) {
+const PRON = ['i', 'you', 'he', 'she', 'it', 'we', 'they'];
+const irrIn = (w, c) => IRR.some(r => r[c] === w);
+const isV3 = w => irrIn(w, 2) || (/ed$/.test(w) && w.length > 3);
+const isV2 = w => (irrIn(w, 1) && !irrIn(w, 0)) || (/ed$/.test(w) && w.length > 3 && !irrIn(w, 0));
+const isIng = w => /\w{2,}ing$/.test(w);
+const ROLE = {
+  'Present Simple': 'регулярна дія або факт', 'Present Continuous': 'дія, що триває зараз або тимчасово',
+  'Past Simple': 'завершена дія в минулому, відповідає на «що зробив?»', 'Past Continuous': 'тривала дія в минулому, відповідає на «що робив?»',
+  'Present Perfect': 'результат на зараз або досвід, коли саме — не важливо', 'Present Perfect Continuous': 'почалось у минулому і триває досі, наголос на тривалості',
+  'Past Perfect': 'дія, що сталася ДО іншої дії в минулому', 'Past Perfect Continuous': 'тривала дія ДО іншого моменту в минулому',
+  'Future Simple': 'майбутнє: рішення зараз, обіцянка, прогноз', 'going to': 'план, який уже є в голові, або висновок з фактів',
+  'Future Continuous': 'що робитиму в певний момент майбутнього', 'Future Perfect': 'що буде зроблено ДО певного моменту в майбутньому',
+  'would + V1': '«би» — уявна ситуація зараз або взагалі', 'would have + V3': '«би» про минуле — те, чого вже не змінити',
+};
+function vp(t, i) {
+  const a = t[i]; let r = t.slice(i + 1), sk = 0;
+  if (PRON.includes(r[0]) && ['will', 'would', 'had', 'have', 'has', 'am', 'is', 'are', 'was', 'were', 'did', 'do', 'does'].includes(a)) { r = r.slice(1); sk = 1; }
+  const [b, c, d] = r; const L = n => n + sk;
+  if (a === 'will' || a === 'shall') {
+    if (b === 'have' && c === 'been' && isIng(d || '')) return ['Future Perfect Continuous', L(4)];
+    if (b === 'have' && isV3(c || '')) return ['Future Perfect', L(3)];
+    if (b === 'be' && isIng(c || '')) return ['Future Continuous', L(3)];
+    if (b === 'be' && isV3(c || '')) return ['Future Simple пасив', L(3)];
+    return b ? ['Future Simple', L(2)] : null;
+  }
+  if (a === 'would') {
+    if (b === 'have' && isV3(c || '')) return ['would have + V3', L(3)];
+    return b ? ['would + V1', L(2)] : null;
+  }
+  if (a === 'had') {
+    if (b === 'been' && isIng(c || '')) return ['Past Perfect Continuous', L(3)];
+    if (b === 'been' && isV3(c || '')) return ['Past Perfect пасив', L(3)];
+    if (isV3(b || '') || (b && (isV2(b) || irrIn(b, 0)))) return ['Past Perfect', L(2)];
+    return sk ? null : ['Past Simple', 1];
+  }
+  if (a === 'have' || a === 'has') {
+    if (b === 'been' && isIng(c || '')) return ['Present Perfect Continuous', L(3)];
+    if (b === 'been' && isV3(c || '')) return ['Present Perfect пасив', L(3)];
+    if (isV3(b || '') || (b && (isV2(b) || irrIn(b, 0)))) return ['Present Perfect', L(2)];
+    return null;
+  }
+  if (['am', 'is', 'are'].includes(a)) {
+    if (b === 'going' && c === 'to') return ['going to', L(4)];
+    if (b === 'being' && isV3(c || '')) return ['Present Continuous пасив', L(3)];
+    if (isIng(b || '')) return ['Present Continuous', L(2)];
+    if (isV3(b || '')) return ['Present Simple пасив', L(2)];
+    return null;
+  }
+  if (a === 'was' || a === 'were') {
+    if (b === 'being' && isV3(c || '')) return ['Past Continuous пасив', L(3)];
+    if (isIng(b || '')) return ['Past Continuous', L(2)];
+    if (isV3(b || '')) return ['Past Simple пасив', L(2)];
+    return null;
+  }
+  if (a === 'did') return ['Past Simple', L(2)];
+  if (a === 'do' || a === 'does') return b ? ['Present Simple', L(2)] : null;
+  if (isV2(a)) return ['Past Simple', 1];
+  return null;
+}
+function phrases(t) {
+  t = t.filter(w => w !== 'not'); const out = [];
+  for (let i = 0; i < t.length;) { const m = vp(t, i); if (m) { out.push({ name: m[0], text: t.slice(i, i + m[1]).join(' ') }); i += m[1]; } else i++; }
+  return out;
+}
+const role = n => ROLE[n.replace(' пасив', '')] ? ' — ' + ROLE[n.replace(' пасив', '')] : '';
+const FN2 = ['V1 (базова форма)', 'V2 (Past Simple)', 'V3 (Perfect і пасив)'];
+function formOf(w) {
+  for (const r of IRR) { const k = r.indexOf(w); if (k > -1) return r.lastIndexOf(w) === k ? FN2[k] : null; }
+  if (isIng(w)) return '-ing форма';
+  return null;
+}
+function diagnose(val, ans, model, ctx, opts = {}) {
+  const tp = opts.topic || '', prev = opts.prev || '';
   const raw = String(val).trim();
   const incomplete = /(\.\.\.|…)$/.test(raw);
   const u = toks(raw);
@@ -321,35 +400,69 @@ function diagnose(val, ans, model, ctx) {
     const isQ = /\?\s*$/.test(firstAlt(ans).trim());
     return { msgs: [isQ ? 'Усі слова правильні, але порядок інший. У питанні допоміжне стоїть ПЕРЕД підметом: (питальне слово) + допоміжне + підмет + основне.' : 'Усі слова правильні, але порядок інший. У розповідному реченні (і в непрямому питанні) порядок прямий: підмет + допоміжне + основне + додаток.'], typoOnly: false };
   }
+  // 1) whole verb phrase: is it a different tense / construction altogether?
+  let pu = phrases(u), pe = phrases(best.e);
+  const bare = t => t.length === 1 && /^[a-z]+$/.test(t[0]) && !isV2(t[0]) && !AUX.includes(t[0]) && !ART.includes(t[0]) && !PREP.includes(t[0]) ? [{ name: 'Present Simple', text: t[0] }] : [];
+  const slip = u.length === 1 && best.e.length === 1 && (ending(u[0], best.e[0]) || lev(u[0], best.e[0]) <= 2);
+  if (!slip && !pu.length && pe.length === 1) pu = bare(u);
+  if (!slip && !pe.length && pu.length === 1) pe = bare(best.e);
+  let sameTense = '';
+  if (pu.length && pu.length === pe.length) {
+    const chain = t => { const w = t.split(' '), c = []; for (const x of w) { if (AUX.includes(x) || x === 'going' || x === 'to') c.push(x); else break; } return c.join(' '); };
+    const diff = pu.map((x, k) => [x, pe[k]]).filter(([x, y]) => x.name !== y.name && !(chain(x.text) && chain(x.text) === chain(y.text)) && x.text.split(' ').slice(1).join(' ') !== y.text);
+    if (diff.length) {
+      diff.forEach(([x, y]) => msgs.push(x.name + ' пасив' === y.name ? `Час правильний (${x.name}), але тут потрібен пасив: дія відбувається з підметом, а не він її робить. Пасив = to be у потрібному часі + V3: ${y.text}.`
+        : y.name + ' пасив' === x.name ? `Час правильний (${y.name}), але тут не пасив: підмет сам виконує дію, тому to be не потрібне — ${y.text}.`
+        : `У вас ${x.name} (${x.text})${role(x.name)}. А тут потрібен ${y.name} (${y.text})${role(y.name)}.`));
+      if (incomplete) msgs.push('Речення недописане: замість кінця стоїть «…». Допишіть повністю — перевіряється все речення.');
+      if (model) return { msgs: ['Ваш переклад відрізняється від можливого варіанта нижче. Інші варіанти теж можуть бути правильними — порівняйте граматику.'], typoOnly: false };
+      return { msgs, typoOnly: false };
+    }
+    if (pu.length === 1) sameTense = pe[0].name.replace(' пасив', ', пасив');
+  }
+  // 2) word by word — every message names the exact word and the reason for THIS word only
   let lastKept = -1; best.ops.forEach(o => { if (o.t !== 'del') lastKept = o.j; });
+  const pre = sameTense ? `Час правильний (${sameTense}), але ` : '';
   best.ops.forEach(o => {
     if (o.t === 'sub') {
       const isAux = AUX.includes(o.u) && AUX.includes(o.e), isArt = ART.includes(o.u) && ART.includes(o.e);
       const isPrep = PREP.includes(o.u) && PREP.includes(o.e);
       const irr = irrWhy(o.u, o.e);
-      if (isPrep) { msgs.push(`Не той прийменник: ${q(o.u)} → ${q(o.e)}. ` + (['in', 'on', 'at'].includes(o.u) && ['in', 'on', 'at'].includes(o.e) ? PREPWHY : (['for', 'since'].includes(o.e) ? 'for — протягом (скільки?), since — з (якого моменту?).' : ''))); gram = true; }
-      else if (irr) { msgs.push(`Не та форма дієслова: ${irr}`); gram = true; }
-      else if (isAux) { msgs.push(`Не та форма: ${q(o.u)} → ${q(o.e)}. ${pairWhy(o.u, o.e)}`.trim()); gram = true; }
+      if (isPrep) { msgs.push(`Не той прийменник: ${q(o.u)} → ${q(o.e)}. ` + (['in', 'on', 'at'].includes(o.u) && ['in', 'on', 'at'].includes(o.e) ? (TIMEW.test(opts.next || '') ? PREPTIME : PREPPLACE) : (['for', 'since'].includes(o.e) ? 'for — протягом (скільки?), since — з (якого моменту?).' : ''))); gram = true; }
+      else if (irr) { msgs.push(`${pre ? pre + 'не' : 'Не'} та форма дієслова: ${irr}`); gram = true; }
+      else if (isAux) {
+        let hint = '';
+        const pw = prev.toLowerCase();
+        if (FORM_SUBJ[o.e] && PRON.includes(pw) && FORM_SUBJ[o.e].includes(pw)) hint = ` Підмет — ${pw === 'i' ? 'I' : pw}, тому ${q(o.e)}.`;
+        else if (FORM_SUBJ[o.e] && SING.includes(o.e) && /^[A-Z][a-z]+$/.test(prev) && !/s$/.test(prev) && prev !== 'The') hint = ` Підмет — ${prev}, одна особа (він / вона), тому ${q(o.e)}.`;
+        msgs.push(`${pre ? pre + 'не' : 'Не'} та форма: ${q(o.u)} → ${q(o.e)}.${hint} ${pairWhy(o.u, o.e, tp)}`.replace(/\s+/g, ' ').trim()); gram = true;
+      }
       else if (isArt) { msgs.push(`Не той артикль: ${q(o.u)} → ${q(o.e)}. ${ARTWHY[o.e] || ''}`.trim()); gram = true; }
       else if (ending(o.u, o.e)) { msgs.push(ending(o.u, o.e)); gram = true; }
       else if (lev(o.u, o.e) <= Math.max(1, Math.floor(o.e.length / 4))) { msgs.push(`Одруківка: ${q(o.u)} → ${q(o.e)}. Граматично тут усе правильно — просто уважніше з написанням.`); typo = true; }
-      else if (o.u.slice(0, 2) === o.e.slice(0, 2) && lev(o.u, o.e) <= 4) { msgs.push(`Не та форма слова: ${q(o.u)} → ${q(o.e)}. ${ctx ? 'Нагадування: ' + ctx.replace(/\.$/, '') + '.' : 'Перевірте, який тут час і яка форма дієслова йому потрібна (V1, V2, V3, -ing).'}`); gram = true; }
-      else { msgs.push(`Замість ${q(o.u)} тут має бути ${q(o.e)}.` + (ctx ? ` Нагадування: ${ctx.replace(/\.$/, '')}.` : '')); gram = true; }
+      else {
+        const fu = formOf(o.u), fe = formOf(o.e);
+        if (fu && fe && fu !== fe) msgs.push(`${q(o.u)} — це ${fu}, а тут потрібна ${fe}: ${q(o.e)}.`);
+        else msgs.push(`Замість ${q(o.u)} тут має бути ${q(o.e)}.`);
+        gram = true;
+      }
     }
   });
   const dels = best.ops.filter(o => o.t === 'del' && !(incomplete && o.j > lastKept));
   if (dels.some(o => o.e === 'not')) { msgs.push('Пропущено not — без нього речення не стає запереченням. Заперечення будуємо так: допоміжне + not + основне (is not selling, don’t eat, didn’t go, hadn’t eaten).'); gram = true; }
   const otherDels = dels.filter(o => o.e !== 'not');
   const auxDels = otherDels.filter(o => AUX.includes(o.e)), artDels = otherDels.filter(o => ART.includes(o.e)), restDels = otherDels.filter(o => !AUX.includes(o.e) && !ART.includes(o.e));
-  if (auxDels.length) { msgs.push(`Бракує допоміжного ${q(auxDels.map(o => o.e).join(' '))}. Допоміжне не перекладається, але саме воно показує час: без нього основне дієслово «висить» (selling без is, been без has не працюють).`); gram = true; }
+  if (auxDels.length) { msgs.push(`Бракує допоміжного ${q(auxDels.map(o => o.e).join(' '))}. Саме допоміжне показує час: без нього основне дієслово «висить».`); gram = true; }
   if (artDels.length) { msgs.push(`Бракує артикля ${q(artDels.map(o => o.e).join(' '))}. ${ARTWHY[artDels[0].e] || ''}`.trim()); gram = true; }
   if (restDels.length) { msgs.push(`Бракує: ${q(restDels.map(o => o.e).join(' '))}.`); gram = true; }
   const ins = best.ops.filter(o => o.t === 'ins');
   if (ins.length) {
     const w = ins.map(o => o.u).join(' ');
-    if (ins.some(o => ['do', 'does', 'did'].includes(o.u)) && !best.e.some(x => ['do', 'does', 'did'].includes(x))) msgs.push(`Зайве ${q(w)}: тут do / does / did не потрібне. У розповідному реченні Present і Past Simple допоміжне не ставимо — -s або -ed «сидить» прямо на основному дієслові. А зі станом (to be) do / does / did не потрібне взагалі.`);
+    const be = ['am', 'is', 'are', 'was', 'were'];
+    if (ins.some(o => ['do', 'does', 'did'].includes(o.u)) && !best.e.some(x => ['do', 'does', 'did'].includes(x))) msgs.push(`Зайве ${q(w)}: тут do / does / did не потрібне. У розповідному реченні Present і Past Simple допоміжне не ставимо — -s або V2 «сидить» прямо на основному дієслові.`);
     else if (ins.some(o => o.u === 'not')) msgs.push('Зайве not: це речення не заперечне. Подивіться, чи є в дужках «not/…», — тільки тоді потрібне заперечення.');
     else if (ins.some(o => ART.includes(o.u))) msgs.push(`Зайвий артикль ${q(w)}. ${ARTWHY['—']}`);
+    else if (ins.every(o => be.includes(o.u)) && !best.e.some(x => be.includes(x))) msgs.push(`Зайве ${q(w)}: am / is / are / was / were як допоміжні потрібні тільки для Continuous (+ing) або пасиву. Тут дієслово стоїть саме.`);
     else msgs.push(`Зайве: ${q(w)}.`);
     gram = true;
   }
@@ -482,7 +595,7 @@ function renderTopic(ti) {
     const id = `t${ti + 1}e${ei + 1}`;
     const checkable = ex.kind !== 'free';
     const ctx = ex.rule && ex.rule.length && RULES[ex.rule[0]] ? RULES[ex.rule[0]].formula : '';
-    h += `<section class="card" id="${id}" data-ctx="${esc(ctx)}" aria-labelledby="${id}-h"><h3 id="${id}-h"><span class="code">${ti + 1}.${ei + 1}</span><span>${esc(ex.instr)}</span></h3>` +
+    h += `<section class="card" id="${id}" data-topic="${t.id}" aria-labelledby="${id}-h"><h3 id="${id}-h"><span class="code">${ti + 1}.${ei + 1}</span><span>${esc(ex.instr)}</span></h3>` +
       (ex.story ? `<p class="story">серія: ${esc(ex.story)}</p>` : '') + (ex.note ? `<p class="note">${esc(ex.note)}</p>` : '') + renderItems(ex, id) +
       (ex.rule && ex.rule.length ? `<div class="clips" hidden>${ex.rule.map(clip).join('')}</div>` : '') +
       `<div class="actions">` + (checkable ? `<button class="btn" type="button" data-act="check" data-ex="${id}">Перевірити</button><button class="btn ghost" type="button" data-act="show" data-ex="${id}">Відповіді й пояснення</button>` : '') +
@@ -491,12 +604,14 @@ function renderTopic(ti) {
   h += pager(ti, 'ex');
   const main = document.getElementById('main');
   main.innerHTML = h;
-  main.querySelectorAll('input.blank, input.full, select, textarea').forEach(el => { if (store.v[el.id] != null) el.value = store.v[el.id]; });
+  main.querySelectorAll('input.blank, input.full, select, textarea').forEach(el => { if (store.v[el.id] != null) { el.value = store.v[el.id]; if (el.classList.contains('blank')) growBlank(el); } });
   main.querySelectorAll('.choices').forEach(g => { const v = store.v[g.id]; if (v != null) g.querySelectorAll('input').forEach(r => { if (r.value === v) r.checked = true; }); });
   t.ex.forEach((ex, ei) => { const id = `t${ti + 1}e${ei + 1}`; if (store.r[id]) check(id, false); });
 }
 
 const fieldsOf = root => [...root.querySelectorAll('input.blank, input.full, select, .choices')];
+function growBlank(el) { if (!el.dataset.w) el.dataset.w = parseFloat(el.style.width) || 6; el.style.width = Math.max(+el.dataset.w, Math.min(40, el.value.length + 2)) + 'ch'; }
+document.addEventListener('input', e => { const el = e.target; if (el.classList && el.classList.contains('blank')) growBlank(el); });
 function judge(el) {
   if (el.classList.contains('choices')) {
     const sel = el.querySelector('input:checked'); el.classList.remove('ok', 'bad');
@@ -510,13 +625,15 @@ function judge(el) {
   if (el.dataset.target) {
     const t = JSON.parse(el.dataset.target);
     const ok = new RegExp(t[0]).test(norm(el.value));
-    const dd = diagnose(el.value, el.dataset.ans, false, '');
+    const dd = diagnose(el.value, el.dataset.ans, false, '', { topic: (el.closest('.card') || {dataset: {}}).dataset.topic });
     el._diag = { msgs: dd.msgs.filter(m => !m.startsWith('Відповідь відрізняється')), html: diffHTML(el.value, el.dataset.ans, true), target: t[1], targetOk: ok, typoOnly: false };
     el.classList.add(ok ? 'ok' : 'bad');
     return ok;
   }
   if (el.tagName !== 'SELECT') {
-    const card = el.closest('.card'); const d = diagnose(el.value, el.dataset.ans, false, card ? card.dataset.ctx : ''); el._diag = d;
+    const card = el.closest('.card'); const pv = el.previousSibling && el.previousSibling.nodeType === 3 ? (el.previousSibling.textContent.trim().split(/\s+/).pop() || '').replace(/[^A-Za-z]/g, '') : '';
+    const nx = el.nextSibling && el.nextSibling.nodeType === 3 ? el.nextSibling.textContent.trim().split(/\s+/).slice(0, 2).join(' ').replace(/[^A-Za-z0-9 ]/g, '') : '';
+    const d = diagnose(el.value, el.dataset.ans, false, '', { topic: card ? card.dataset.topic : '', prev: pv, next: nx }); el._diag = d;
     if (el.classList.contains('full')) { d.html = diffHTML(el.value, el.dataset.ans, false); d.msgs = d.msgs.filter(m => !m.startsWith('Відповідь відрізняється')); }
     el.classList.add(d.typoOnly ? 'near' : 'bad');
   } else el._diag = { msgs: [`Обрано ${q(el.options[el.selectedIndex].textContent)}, а правильно — ${q(el.querySelector(`option[value="${el.dataset.ans}"]`).textContent)}.`], typoOnly: false };
